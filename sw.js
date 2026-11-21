@@ -1,4 +1,4 @@
-var C="spartito-v6";
+var C="spartito-v7";
 var CORE=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
 self.addEventListener("install",function(e){
   e.waitUntil(caches.open(C).then(function(c){return Promise.all(CORE.map(function(u){return c.add(u).catch(function(){})}))}).then(function(){return self.skipWaiting()}));

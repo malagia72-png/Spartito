@@ -1,6 +1,6 @@
 # Spartito per pianoforte
 
-App web installabile (PWA) per scrivere spartiti per pianoforte: doppio pentagramma, tempo in battuta, armatura, note puntate, terzine, accordi, travi, legature, segni di ripetizione, commenti e dinamiche. Salva e riapre gli spartiti (`.json`) ed esporta in PDF. Funziona anche offline.
+App web installabile (PWA) per scrivere spartiti per pianoforte: doppio pentagramma, tempo in battuta, armatura, note puntate, terzine, accordi, travi, legature, segni di ripetizione, commenti, dinamiche, forcelle, diteggiatura, note di abbellimento, nomi delle note, metronomo e penna a mano libera. Salva e riapre gli spartiti (`.json`) ed esporta in PDF. Funziona anche offline.
 
 ## Pubblicarla con GitHub Pages (gratis)
 
@@ -20,7 +20,7 @@ Apri l'app una prima volta con la connessione attiva: così si salva anche la li
 
 ## Aggiornare l'app
 
-Carica di nuovo i file modificati (**Add file → Upload files**, stessi nomi, poi Commit). In `sw.js` cambia il numero di versione della cache (`spartito-v6` → `spartito-v7`), altrimenti i telefoni continuano a usare la copia vecchia. Poi riapri l'app una volta con la connessione.
+Carica di nuovo i file modificati (**Add file → Upload files**, stessi nomi, poi Commit). In `sw.js` cambia il numero di versione della cache (`spartito-v7` → `spartito-v8`), altrimenti i telefoni continuano a usare la copia vecchia. Poi riapri l'app una volta con la connessione.
 
 ## Salvare il lavoro
 

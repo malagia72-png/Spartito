@@ -38,6 +38,7 @@ svg .o{fill:var(--paper);stroke:var(--ink);stroke-width:1.5}
 svg .s{stroke:var(--ink);stroke-width:1.2;fill:none}
 svg .cur{fill:var(--hl);stroke:var(--hl)}
 svg text{fill:var(--ink)}
+svg .pen{fill:none;stroke:var(--hl);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 #tp{display:none;margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
 #tp input{width:100%;height:40px;font:inherit;font-size:16px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--bg);color:var(--ink);margin-bottom:6px}
 #chips button{min-width:0;height:32px;font-size:13px;padding:0 8px}
@@ -56,6 +57,12 @@ input[type=range]{width:130px;accent-color:var(--acc)}
 <div class="bar" id="dots"><span class="l">Punto</span></div>
 <div class="bar" id="trs"><span class="l">Gruppo</span></div>
 <div class="bar"><span class="l">Armatura</span><select id="ks" aria-label="Armatura di chiave"><option value="0">Do magg. / La min. (nessuna)</option><option value="1">Sol (1 ♯)</option><option value="2">Re (2 ♯)</option><option value="3">La (3 ♯)</option><option value="4">Mi (4 ♯)</option><option value="5">Si (5 ♯)</option><option value="6">Fa♯ (6 ♯)</option><option value="7">Do♯ (7 ♯)</option><option value="-1">Fa (1 ♭)</option><option value="-2">Si♭ (2 ♭)</option><option value="-3">Mi♭ (3 ♭)</option><option value="-4">La♭ (4 ♭)</option><option value="-5">Re♭ (5 ♭)</option><option value="-6">Sol♭ (6 ♭)</option><option value="-7">Do♭ (7 ♭)</option></select></div>
+<div class="bar"><span class="l">Dito/Forc.</span><select id="fg" aria-label="Dito"><option value="1">Dito 1</option><option value="2">Dito 2</option><option value="3">Dito 3</option><option value="4">Dito 4</option><option value="5">Dito 5</option><option value="0">Togli dito</option></select><select id="hp" aria-label="Forcella"><option value="c">Crescendo &lt;</option><option value="d">Diminuendo &gt;</option></select></div>
+<div class="bar"><span class="l">Righe</span><select id="mp" aria-label="Battute per riga"><option value="3">3 battute per riga</option><option value="4">4 battute per riga</option><option value="5">5 battute per riga</option><option value="6" selected>6 battute per riga</option><option value="7">7 battute per riga</option><option value="8">8 battute per riga</option></select></div>
+<div class="bar" id="mnb"><span class="l">N° battute</span></div>
+<div class="bar" id="nmb"><span class="l">Nomi note</span></div>
+<div class="bar" id="mtb"><span class="l">Metronomo</span></div>
+<div class="bar" id="pens"><span class="l">Penna</span><button id="pundo">↶ Annulla tratto</button><button id="pclr">Cancella penna</button></div>
 <div class="bar" id="signs"><span class="l">Segno</span><select id="sg" aria-label="Segno di ripetizione"><option value="rs">Ritornello: inizio |:</option><option value="re">Ritornello: fine :|</option><option value="v1">Casa 1</option><option value="v2">Casa 2</option><option value="dc">D.C.</option><option value="ds">D.S.</option><option value="fine">Fine</option><option value="segno">Segno §</option><option value="coda">Coda ⊕</option><option value="tocoda">To Coda</option><option value="clr">Cancella segni</option></select></div>
 <div class="sheet">
 <input id="ti" placeholder="Titolo" aria-label="Titolo">
@@ -69,7 +76,7 @@ input[type=range]{width:130px;accent-color:var(--acc)}
 <script>
 var DUR={1:4,2:2,4:1,8:0.5,16:0.25};function dur(e){return DUR[e.d]*(e.dot?1.5:1)*(e.tr?2/3:1)}
 var MARK=[["Largo",50],["Adagio",66],["Andante",80],["Moderato",100],["Allegretto",112],["Allegro",132],["Vivace",156],["Presto",176]];
-var uid=0;var st={tx:[],tr:0,dot:0,beam:1,m:[],d:4,mode:"note",acc:0,cur:null,n:4,q:4};
+var uid=0;var st={pn:[],mn:1,nm:0,mt:0,tx:[],tr:0,dot:0,beam:1,m:[],d:4,mode:"note",acc:0,cur:null,n:4,q:4};
 var MPR=6,RH=230,CW=68,W=908,MW=(W-CW)/MPR,KS=0,SP=5,SEMI=[0,2,4,5,7,9,11];
 var sv=document.getElementById("sv"),msg=document.getElementById("msg");
 function newM(){return{t:[],b:[]}}
@@ -88,13 +95,16 @@ function mk(id,items,key){
 }
 mk("durs",[["𝅝 1",1],["𝅗𝅥 1/2",2],["♩ 1/4",4],["♪ 1/8",8]],"d");
 mk("durs",[["♬ 1/16",16]],"d");
-mk("modes",[["Nota","note"],["Pausa","rest"],["Legatura","tie"],["Leg. lunga","slur"],["Accordo","chord"],["Segni","mark"],["Testo","text"],["Gomma","erase"]],"mode");
+mk("modes",[["Nota","note"],["Pausa","rest"],["Legatura","tie"],["Leg. lunga","slur"],["Accordo","chord"],["Segni","mark"],["Testo","text"],["Dito","fing"],["Forcella","hair"],["Abbell.","grace"],["Penna","pen"],["Gomma","erase"]],"mode");
 mk("accs",[["♮",0],["♯",1],["♭",-1]],"acc");
 mk("opts",[["Unite a travi",1],["Con codina",0]],"beam");
+mk("mnb",[["Sì",1],["No",0]],"mn");
+mk("nmb",[["No",0],["Lettere","l"],["Do Re Mi","i"]],"nm");
+mk("mtb",[["No",0],["Sì",1]],"mt");
 mk("trs",[["Normale",0],["Terzina",1]],"tr");
 mk("accs",[["Bequadro",2]],"acc");
 mk("dots",[["Senza punto",0],["Puntata ·",1]],"dot");
-function sync(){if(st.mode!=="text"&&tEdit)closeTx();if(st.mode!=="slur"&&st.pend){st.pend=null;st.cur=null;draw()}document.querySelectorAll(".bar button[data-k]").forEach(function(b){b.classList.toggle("on",String(st[b.dataset.k])===b.dataset.v)})}
+function sync(){if(st.mode!=="text"&&tEdit)closeTx();sv.style.touchAction=st.mode==="pen"?"none":"manipulation";if(st.pend&&st.pend.m!==st.mode){st.pend=null;st.cur=null;draw()}document.querySelectorAll(".bar button[data-k]").forEach(function(b){b.classList.toggle("on",String(st[b.dataset.k])===b.dataset.v)})}
 var mkSel=document.getElementById("mk");
 MARK.forEach(function(x,i){var o=document.createElement("option");o.value=i;o.textContent=x[0];if(x[0]==="Allegretto")o.selected=true;mkSel.appendChild(o)});
 function tmText(){
@@ -114,7 +124,7 @@ function exs(a,mi){
   var x0=CW+(mi%MPR)*MW+14,pos=0,c=cap();
   return a.map(function(e){var x=x0+(pos/c)*(MW-34)+8;pos+=dur(e);return x});
 }
-function midi(e,k){var d=e.s+(k==="t"?2:-10);var o=4+Math.floor(d/7);var n=((d%7)+7)%7;return 12*(o+1)+SEMI[n]+(e.a===2?0:(e.a?e.a:kalt(n)))}
+function midi(e,k){var d=e.s+(k==="t"?2:-10);var o=4+Math.floor(d/7);var n=((d%7)+7)%7;return 12*(o+1)+SEMI[n]+(e.ea!==undefined?e.ea:(e.a===2?0:(e.a?e.a:kalt(n))))}
 function body(r0,r1){
   var o="";
   for(var r=r0;r<r1;r++){
@@ -125,6 +135,7 @@ function body(r0,r1){
     o+='<text x="16" y="'+(t+38)+'" font-size="52" font-family="serif">𝄞</text>';
     o+='<text x="16" y="'+(b+30)+'" font-size="46" font-family="serif">𝄢</text>';
     o+=keySvg(t,b);
+    if(st.mn&&r>0)o+='<text x="'+(CW-3)+'" y="'+(t-3)+'" font-size="10" font-style="italic" text-anchor="end" font-family="Georgia,serif">'+(r*MPR+1)+'</text>';
     if(r===0)[t,b].forEach(function(y){o+='<text x="'+(50+7*Math.abs(KS))+'" y="'+(y+18)+'" font-size="23" font-weight="700" font-family="serif" text-anchor="middle">'+st.n+'</text><text x="'+(50+7*Math.abs(KS))+'" y="'+(y+38)+'" font-size="23" font-weight="700" font-family="serif" text-anchor="middle">'+st.q+'</text>'});
   }
   st.m.forEach(function(m,mi){
@@ -137,14 +148,16 @@ function body(r0,r1){
       m[k].forEach(function(e,i){
         var x=xs[i],c=(st.cur===e)?" cur":"";
         if(e.rest){o+=rest(e,x,top,c);if(e.d===16)o+='<circle class="n" cx="'+(x-4)+'" cy="'+(top+25)+'" r="2.5"/>';if(e.dot)o+='<circle class="n" cx="'+(x+9)+'" cy="'+(top+17)+'" r="1.7"/>';return}
-        var y=by-e.s*SP;o+=noteSvg(e,x,by,c,!!bm[i]);
+        var y=by-e.s*SP;o+=noteSvg(e,x,by,c,!!bm[i]);if(e.g)o+=graceSvg(e,k,x,by);if(e.f)o+=fingSvg(e,k,x,by);if(st.nm)o+=nameSvg(e,k,x,by);
         if(e.l)o+=tieSvg(e,k,mi,i,x,y);
         if(e.sl)o+=slurSvg(e,k);
+        if(e.hp)o+=hairSvg(e,k);
       });
       o+=beamSvg(m[k],bm,xs,by);
       o+=tripSvg(m[k],bm,xs,by);
     });
   });
+  st.pn.forEach(function(sk){var r=Math.floor(sk[0][1]/RH);if(r<r0||r>=r1)return;o+='<path class="pen" d="M'+sk.map(function(q){return q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' L')+'"/>'});
   st.tx.forEach(function(n){
     var r=Math.floor(n.y/RH);if(r<r0||r>=r1)return;
     var dyn=/^(p{1,3}|mp|mf|f{1,3}|sf|sfz|fp)$/.test(n.t);
@@ -152,7 +165,7 @@ function body(r0,r1){
   });
   return o;
 }
-function draw(){var rows=Math.ceil(st.m.length/MPR);sv.setAttribute("viewBox","0 0 "+W+" "+(rows*RH));sv.innerHTML=body(0,rows)}
+function draw(){applyAcc();var rows=Math.ceil(st.m.length/MPR);sv.setAttribute("viewBox","0 0 "+W+" "+(rows*RH));sv.innerHTML=body(0,rows)}
 function rest(e,x,t,c){
   if(e.d===1)return '<rect class="n'+c+'" x="'+(x-6)+'" y="'+(t+10)+'" width="12" height="5"/>';
   if(e.d===2)return '<rect class="n'+c+'" x="'+(x-6)+'" y="'+(t+15)+'" width="12" height="5"/>';
@@ -163,6 +176,7 @@ sv.addEventListener("click",function(ev){
   var r=sv.getBoundingClientRect(),k=W/r.width;
   var x=(ev.clientX-r.left)*k,y=(ev.clientY-r.top)*k;
   msg.textContent="";
+  if(st.mode==="pen")return;
   if(st.mode==="text"){
     var hit=-1,hd=24;
     st.tx.forEach(function(n,i){var w=n.t.length*3.4+8,dxx=x<n.x?n.x-x:(x>n.x+w?x-n.x-w:0),d=Math.sqrt(dxx*dxx+Math.pow(y-(n.y-4),2));if(d<hd){hd=d;hit=i}});
@@ -192,6 +206,41 @@ sv.addEventListener("click",function(ev){
     if(!nx||nx.e.rest){msg.textContent="Dopo questa nota non c’è un’altra nota a cui legarla.";return}
     a[bi].l=true;draw();return;
   }
+  if(st.mode==="fing"){
+    var fi=-1,fd=22;
+    xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<fd&&!a[i].rest){fd=d;fi=i}});
+    if(fi<0){msg.textContent="Tocca una nota per indicare il dito.";return}
+    var fv=document.getElementById("fg").value;
+    if(fv==="0"||a[fi].f===fv)delete a[fi].f;else a[fi].f=fv;
+    draw();return;
+  }
+  if(st.mode==="grace"){
+    var gi=-1,gd=24;
+    xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<gd&&!a[i].rest){gd=d;gi=i}});
+    if(gi<0){msg.textContent="Tocca vicino a una nota per aggiungere una nota di abbellimento prima di essa; tocca la stessa altezza per toglierla.";return}
+    var gs=Math.max(-6,Math.min(14,Math.round((top+40-y)/SP))),ge=a[gi],gl=ge.g||[],gx=-1;
+    gl.forEach(function(g,j){if(g.s===gs)gx=j});
+    if(gx>=0)gl.splice(gx,1);
+    else if(gl.length>=3){msg.textContent="Massimo 3 note di abbellimento per nota.";return}
+    else{gl.push({s:gs,a:st.acc});tone(midi({s:gs,a:st.acc},stf),0.2)}
+    if(gl.length)ge.g=gl;else delete ge.g;
+    draw();return;
+  }
+  if(st.mode==="hair"){
+    var hi2=-1,hd2=22;
+    xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<hd2&&!a[i].rest){hd2=d;hi2=i}});
+    if(hi2<0){msg.textContent="Tocca la prima nota, poi l\u2019ultima nota della forcella.";return}
+    var hv=a[hi2];
+    if(st.pend&&st.pend.m==="hair"){
+      var HL=flatK(stf),ha=-1,hb=-1;
+      HL.forEach(function(p,j){if(p.e===st.pend.e)ha=j;if(p.e===hv)hb=j});
+      if(st.pend.k!==stf||ha<0||hb<=ha){st.pend=null;st.cur=null;draw();msg.textContent="Forcella annullata. Tocca la prima nota e poi l\u2019ultima, nella stessa mano.";return}
+      if(!hv.id)hv.id=++uid;
+      st.pend.e.hp=document.getElementById("hp").value;st.pend.e.hq=hv.id;st.pend=null;st.cur=null;draw();return;
+    }
+    if(hv.hp){delete hv.hp;delete hv.hq;draw();return}
+    st.pend={k:stf,e:hv,m:"hair"};st.cur=hv;draw();msg.textContent="Ora tocca l\u2019ultima nota della forcella.";return;
+  }
   if(st.mode==="chord"){
     var ci=-1,cd=20;
     xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<cd&&!a[i].rest){cd=d;ci=i}});
@@ -214,7 +263,7 @@ sv.addEventListener("click",function(ev){
       st.pend.e.sl=ev.id;st.pend=null;st.cur=null;draw();return;
     }
     if(ev.sl){ev.sl=0;draw();return}
-    st.pend={k:stf,e:ev};st.cur=ev;draw();msg.textContent="Ora tocca l’ultima nota della legatura.";return;
+    st.pend={k:stf,e:ev,m:"slur"};st.cur=ev;draw();msg.textContent="Ora tocca l’ultima nota della legatura.";return;
   }
   if(st.mode==="erase"){
     var best=-1,bd=18;
@@ -248,18 +297,20 @@ function stop(){timers.forEach(clearTimeout);timers=[];st.cur=null;draw();playBt
 playBtn.onclick=function(){
   if(timers.length){stop();return}
   var spb=60/Number(document.getElementById("bpm").value),mt=cap()*spb,end=0;
-  playBtn.textContent="■ Stop";tieInfo();
+  playBtn.textContent="■ Stop";applyAcc();tieInfo();
   try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){}
   playOrder().forEach(function(mi,pi){var m=st.m[mi];
     ["t","b"].forEach(function(k){
       var t=pi*mt;
       m[k].forEach(function(e){
         var len=dur(e)*spb,at=t;
+        if(!e.rest&&!e.skip&&e.g)e.g.forEach(function(g,gi){tone(midi(g,k),0.09,ac.currentTime+at+0.05-(e.g.length-gi)*0.07)});
         if(!e.rest&&!e.skip)heads(e).forEach(function(h){tone(midi(h,k),Math.max(0.15,(len+(e.ext||0)*spb)*0.95),ac.currentTime+at+0.05)});
         timers.push(setTimeout(function(){st.cur=e;draw()},at*1000));
         t+=len;
       });
     });
+    if(st.mt){var un=(st.q===8&&st.n%3===0)?1.5:1;for(var cb=0;cb*un<cap()-1e-6;cb++)click(ac.currentTime+pi*mt+cb*un*spb+0.05,cb===0)}
     end=(pi+1)*mt;
   });
   timers.push(setTimeout(stop,end*1000+100));
@@ -373,7 +424,95 @@ document.getElementById("tcan").onclick=closeTx;
 document.getElementById("tdel").onclick=function(){if(tEdit&&tEdit.i>=0)st.tx.splice(tEdit.i,1);closeTx();draw()};
 document.getElementById("tt").onkeydown=function(e){if(e.key==="Enter")saveTx()};
 document.getElementById("ks").onchange=function(){setKS(+this.value);draw()};
-function heads(e){var P=[{s:e.s,a:e.a||0}].concat(e.c||[]);P.sort(function(p,q){return p.s-q.s});return P}
+function applyAcc(){
+  ["t","b"].forEach(function(k){
+    st.m.forEach(function(m){
+      var mem={};
+      m[k].forEach(function(e){
+        if(e.rest)return;
+        var upd={};
+        [e].concat(e.c||[]).forEach(function(h){
+          var d=h.s+(k==="t"?2:-10),n=((d%7)+7)%7,al;
+          if(h.a===2)al=0;else if(h.a)al=h.a;else if(mem[h.s]!==undefined)al=mem[h.s];else al=kalt(n);
+          h.ea=al;if(h.a)upd[h.s]=al;
+        });
+        for(var s in upd)mem[s]=upd[s];
+      });
+    });
+  });
+}
+function fingSvg(e,k,x,by){
+  var r=rng(e),up=(r[0]+r[1])/2<4,y;
+  if(k==="t")y=by-r[1]*SP-(up&&e.d>1?38:10);else y=by-r[0]*SP+(!up&&e.d>1?42:16);
+  return '<text x="'+x+'" y="'+y+'" font-size="10" font-style="italic" text-anchor="middle" font-family="Georgia,serif">'+e.f+'</text>';
+}
+var NL=["C","D","E","F","G","A","B"],NI=["Do","Re","Mi","Fa","Sol","La","Si"];
+function nameSvg(e,k,x,by){
+  var it=st.nm==="i";
+  var t=heads(e).map(function(h){
+    var d=h.s+(k==="t"?2:-10),n=((d%7)+7)%7,al=h.ea!==undefined?h.ea:(h.a===2?0:(h.a?h.a:kalt(n)));
+    return (it?NI:NL)[n]+(al>0?"\u266f":(al<0?"\u266d":""));
+  }).join(it?" ":"");
+  return '<text x="'+x+'" y="'+(k==="t"?by+13:by-46)+'" font-size="8" text-anchor="middle" font-family="Georgia,serif">'+t+'</text>';
+}
+function graceSvg(e,k,x,by){
+  var o="",n=e.g.length,gxl=0,gyl=0,s,s2;
+  e.g.forEach(function(g,i){
+    var gx=x-27-(n-1-i)*11,gy=by-g.s*SP,up=g.s<4,sx=up?gx+3.6:gx-3.6,ey=gy+(up?-18:18);
+    if(g.s<=-2)for(s=-2;s>=g.s;s-=2)o+='<line class="l" x1="'+(gx-6)+'" x2="'+(gx+6)+'" y1="'+(by-s*SP)+'" y2="'+(by-s*SP)+'"/>';
+    if(g.s>=10)for(s2=10;s2<=g.s;s2+=2)o+='<line class="l" x1="'+(gx-6)+'" x2="'+(gx+6)+'" y1="'+(by-s2*SP)+'" y2="'+(by-s2*SP)+'"/>';
+    o+='<ellipse class="n" cx="'+gx+'" cy="'+gy+'" rx="3.8" ry="2.9" transform="rotate(-20 '+gx+' '+gy+')"/>';
+    o+='<line class="s" x1="'+sx+'" x2="'+sx+'" y1="'+gy+'" y2="'+ey+'"/>';
+    o+='<path class="s" d="M'+sx+' '+ey+' q'+(up?"6 4 4 11":"6 -4 4 -11")+'"/>';
+    o+='<line class="s" x1="'+(sx-5)+'" x2="'+(sx+6)+'" y1="'+(ey+(up?8:-8))+'" y2="'+(ey+(up?2:-2))+'"/>';
+    if(g.a)o+='<text x="'+(gx-12)+'" y="'+(gy+4)+'" font-size="10" font-family="serif">'+(g.a===2?"\u266e":(g.a>0?"\u266f":"\u266d"))+'</text>';
+    gxl=gx;gyl=gy;
+  });
+  var ym=by-rng(e)[0]*SP;
+  o+='<path class="s" stroke-width="1" d="M'+(gxl+2)+' '+(gyl+5)+' Q'+((gxl+x)/2)+' '+(Math.max(gyl,ym)+12)+' '+(x-9)+' '+(ym+5)+'"/>';
+  return o;
+}
+function hairSvg(e,k){
+  var L=flatK(k),a=-1,b=-1;
+  L.forEach(function(p,j){if(p.e===e)a=j;if(e.hq&&p.e.id===e.hq)b=j});
+  if(a<0||b<=a)return"";
+  var r0=Math.floor(L[a].mi/MPR),yc=tt(r0)+66,x1=exs(st.m[L[a].mi][k],L[a].mi)[L[a].i]-6,x2;
+  if(Math.floor(L[b].mi/MPR)===r0)x2=exs(st.m[L[b].mi][k],L[b].mi)[L[b].i]+8;else x2=W-6;
+  return e.hp==="c"?'<path class="s" d="M'+x2+' '+(yc-5)+' L'+x1+' '+yc+' L'+x2+' '+(yc+5)+'"/>':'<path class="s" d="M'+x1+' '+(yc-5)+' L'+x2+' '+yc+' L'+x1+' '+(yc+5)+'"/>';
+}
+function click(when,acc){
+  try{
+    ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+    var o=ac.createOscillator(),g=ac.createGain();
+    o.type="square";o.frequency.value=acc?1500:1000;
+    g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(0.15,when+0.002);g.gain.exponentialRampToValueAtTime(0.0001,when+0.04);
+    o.connect(g);g.connect(ac.destination);o.start(when);o.stop(when+0.06);
+  }catch(e){}
+}
+(function(){
+  var cur=null,el=null;
+  function pt(ev){var r=sv.getBoundingClientRect(),k=W/r.width;return[(ev.clientX-r.left)*k,(ev.clientY-r.top)*k]}
+  function dstr(p){return"M"+p.map(function(q){return q[0].toFixed(1)+" "+q[1].toFixed(1)}).join(" L")}
+  sv.addEventListener("pointerdown",function(ev){
+    if(st.mode!=="pen")return;
+    cur=[pt(ev)];
+    el=document.createElementNS("http://www.w3.org/2000/svg","path");el.setAttribute("class","pen");sv.appendChild(el);
+    try{sv.setPointerCapture(ev.pointerId)}catch(e){}
+    ev.preventDefault();
+  });
+  sv.addEventListener("pointermove",function(ev){
+    if(!cur)return;
+    var q=pt(ev),l=cur[cur.length-1];
+    if(Math.abs(q[0]-l[0])+Math.abs(q[1]-l[1])<2)return;
+    cur.push(q);el.setAttribute("d",dstr(cur));
+  });
+  function end(){if(!cur)return;if(el)el.remove();if(cur.length>1)st.pn.push(cur);cur=null;el=null;draw()}
+  sv.addEventListener("pointerup",end);sv.addEventListener("pointercancel",end);
+})();
+document.getElementById("pundo").onclick=function(){st.pn.pop();draw()};
+document.getElementById("pclr").onclick=function(){st.pn=[];draw()};
+document.getElementById("mp").onchange=function(){MPR=+this.value;setKS(KS);draw()};
+function heads(e){var P=[{s:e.s,a:e.a||0,ea:e.ea}].concat(e.c||[]);P.sort(function(p,q){return p.s-q.s});return P}
 function rng(e){var P=heads(e);return [P[0].s,P[P.length-1].s]}
 function setHeads(e,P){e.s=P[0].s;e.a=P[0].a||0;if(P.length>1)e.c=P.slice(1);else delete e.c}
 function noteSvg(e,x,by,c,beamed){
@@ -456,15 +595,15 @@ function tieSvg(e,k,mi,i,x,y){
 function tieInfo(){["t","b"].forEach(function(k){var L=[];st.m.forEach(function(m){m[k].forEach(function(e){e.skip=false;e.ext=0;L.push(e)})});
   for(var i=0;i<L.length;i++){if(L[i].skip)continue;var j=i;while(L[j].l&&L[j+1]&&!L[j].rest&&!L[j+1].rest&&midi(L[j],k)===midi(L[j+1],k)){L[i].ext+=dur(L[j+1]);L[j+1].skip=true;j++}}})}
 function snap(){
-  var c=function(a){return a.map(function(e){var o={d:e.d};if(e.rest)o.rest=true;else{o.s=e.s;o.a=e.a||0}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.c&&!e.rest)o.c=e.c.map(function(h){return{s:h.s,a:h.a||0}});if(e.l)o.l=true;if(e.id)o.id=e.id;if(e.sl)o.sl=e.sl;return o})};
-  return{app:"spartito",v:1,ks:KS,tx:st.tx.map(function(n){return{x:n.x,y:n.y,t:n.t}}),title:document.getElementById("ti").value,composer:document.getElementById("co").value,ts:st.n+"/"+st.q,mark:+mkSel.value,bpm:+document.getElementById("bpm").value,m:st.m.map(function(m){var o={t:c(m.t),b:c(m.b)};if(m.rs)o.rs=true;if(m.re)o.re=true;if(m.v)o.v=m.v;if(m.mk)o.mk=m.mk;return o})};
+  var c=function(a){return a.map(function(e){var o={d:e.d};if(e.rest)o.rest=true;else{o.s=e.s;o.a=e.a||0}if(e.g)o.g=e.g.map(function(g){return{s:g.s,a:g.a||0}});if(e.f)o.f=e.f;if(e.hp){o.hp=e.hp;o.hq=e.hq}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.c&&!e.rest)o.c=e.c.map(function(h){return{s:h.s,a:h.a||0}});if(e.l)o.l=true;if(e.id)o.id=e.id;if(e.sl)o.sl=e.sl;return o})};
+  return{app:"spartito",v:1,mpr:MPR,pn:st.pn.map(function(sk){return sk.map(function(q){return[Math.round(q[0]*10)/10,Math.round(q[1]*10)/10]})}),ks:KS,tx:st.tx.map(function(n){return{x:n.x,y:n.y,t:n.t}}),title:document.getElementById("ti").value,composer:document.getElementById("co").value,ts:st.n+"/"+st.q,mark:+mkSel.value,bpm:+document.getElementById("bpm").value,m:st.m.map(function(m){var o={t:c(m.t),b:c(m.b)};if(m.rs)o.rs=true;if(m.re)o.re=true;if(m.v)o.v=m.v;if(m.mk)o.mk=m.mk;return o})};
 }
 function loadScore(j){
   var tsSel=document.getElementById("ts");
   if(!j||!Array.isArray(j.m)||j.m.length<1||j.m.length>48)throw 1;
   var ts=String(j.ts||"4/4");
   if(!Array.prototype.some.call(tsSel.options,function(o){return o.value===ts}))throw 1;
-  var cl=function(a){if(!Array.isArray(a))throw 1;return a.map(function(e){if(!DUR[e.d])throw 1;var o={d:e.d};if(e.rest)o.rest=true;else{o.s=Math.max(-6,Math.min(14,Math.round(+e.s)));if(isNaN(o.s))throw 1;o.a=e.a===2?2:(e.a===1?1:(e.a===-1?-1:0));if(Array.isArray(e.c)){o.c=e.c.slice(0,8).map(function(h){var hs=Math.max(-6,Math.min(14,Math.round(+h.s)));if(isNaN(hs))throw 1;return{s:hs,a:h.a===2?2:(h.a===1?1:(h.a===-1?-1:0))}});var PP=[{s:o.s,a:o.a}].concat(o.c).sort(function(p,q){return p.s-q.s});setHeads(o,PP)}}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.l)o.l=true;if(+e.id>0){o.id=+e.id;uid=Math.max(uid,o.id)}if(+e.sl>0)o.sl=+e.sl;return o})};
+  var cl=function(a){if(!Array.isArray(a))throw 1;return a.map(function(e){if(!DUR[e.d])throw 1;var o={d:e.d};if(e.rest)o.rest=true;else{o.s=Math.max(-6,Math.min(14,Math.round(+e.s)));if(isNaN(o.s))throw 1;o.a=e.a===2?2:(e.a===1?1:(e.a===-1?-1:0));if(Array.isArray(e.c)){o.c=e.c.slice(0,8).map(function(h){var hs=Math.max(-6,Math.min(14,Math.round(+h.s)));if(isNaN(hs))throw 1;return{s:hs,a:h.a===2?2:(h.a===1?1:(h.a===-1?-1:0))}});var PP=[{s:o.s,a:o.a}].concat(o.c).sort(function(p,q){return p.s-q.s});setHeads(o,PP)}}if(Array.isArray(e.g)&&!e.rest)o.g=e.g.slice(0,3).map(function(g){var gs=Math.max(-6,Math.min(14,Math.round(+g.s)));if(isNaN(gs))throw 1;return{s:gs,a:g.a===2?2:(g.a===1?1:(g.a===-1?-1:0))}});if(["1","2","3","4","5"].indexOf(String(e.f))>=0&&!e.rest)o.f=String(e.f);if((e.hp==="c"||e.hp==="d")&&+e.hq>0){o.hp=e.hp;o.hq=+e.hq}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.l)o.l=true;if(+e.id>0){o.id=+e.id;uid=Math.max(uid,o.id)}if(+e.sl>0)o.sl=+e.sl;return o})};
   var ms=j.m.map(function(m){var o={t:cl(m.t),b:cl(m.b)};if(m.rs)o.rs=true;if(m.re)o.re=true;if(m.v===1||m.v===2)o.v=m.v;if(["dc","ds","fine","segno","coda","tocoda"].indexOf(m.mk)>=0)o.mk=m.mk;return o});
   while(ms.length<2||ms.length%2)ms.push(newM());
   var p=ts.split("/");st.n=+p[0];st.q=+p[1];st.m=ms;st.cur=null;tsSel.value=ts;
@@ -475,6 +614,8 @@ function loadScore(j){
   document.getElementById("bpm").value=Math.max(40,Math.min(200,+j.bpm||112));
   var kv=Math.max(-7,Math.min(7,Math.round(+j.ks||0)));setKS(kv);document.getElementById("ks").value=String(kv);
   st.tx=Array.isArray(j.tx)?j.tx.slice(0,300).filter(function(n){return n&&typeof n.t==="string"&&isFinite(n.x)&&isFinite(n.y)}).map(function(n){return{x:+n.x,y:+n.y,t:n.t.slice(0,60)}}):[];
+  var mp=Math.max(3,Math.min(8,Math.round(+j.mpr||6)));MPR=mp;document.getElementById("mp").value=String(mp);setKS(kv);
+  st.pn=Array.isArray(j.pn)?j.pn.slice(0,400).map(function(sk){return Array.isArray(sk)?sk.slice(0,600).filter(function(q){return Array.isArray(q)&&isFinite(q[0])&&isFinite(q[1])}).map(function(q){return[+q[0],+q[1]]}):[]}).filter(function(sk){return sk.length>1}):[];
   tmText();draw();
 }
 document.getElementById("op").onclick=function(){document.getElementById("fl").click()};
@@ -495,7 +636,7 @@ document.getElementById("sf").onclick=async function(){
 };
 document.getElementById("add").onclick=function(){if(st.m.length<48){st.m.push(newM());draw()}};
 document.getElementById("del").onclick=function(){if(st.m.length>2){st.m.pop();draw()}};
-document.getElementById("clr").onclick=function(){st.m=st.m.map(newM);st.tx=[];draw()};
+document.getElementById("clr").onclick=function(){st.m=st.m.map(newM);st.tx=[];st.pn=[];draw()};
 function getDl(){
   if(window.claude&&claude.use){try{return claude.use("downloads")}catch(e){}}
   return Promise.resolve({save:async function(o){
@@ -517,7 +658,7 @@ document.getElementById("pdf").onclick=async function(){
   var title=document.getElementById("ti").value||"Senza titolo",comp=document.getElementById("co").value;
   var tmx=document.getElementById("tm").textContent;
   var rows=Math.ceil(st.m.length/MPR),per=5,pages=Math.ceil(rows/per);
-  var css=".l{stroke:#000;stroke-width:1}.n{fill:#000}.o{fill:#fff;stroke:#000;stroke-width:1.5}.s{stroke:#000;stroke-width:1.2;fill:none}text{fill:#000}";
+  var css=".l{stroke:#000;stroke-width:1}.n{fill:#000}.o{fill:#fff;stroke:#000;stroke-width:1.5}.s{stroke:#000;stroke-width:1.2;fill:none}text{fill:#000}.pen{fill:none;stroke:#c0392b;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}";
   msg.textContent="Creo il PDF…";
   try{
     var pdf=new jspdf.jsPDF({unit:"mm",format:"a4"});
