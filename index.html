@@ -77,14 +77,14 @@ input[type=range]{width:130px;accent-color:var(--acc)}
 var DUR={1:4,2:2,4:1,8:0.5,16:0.25};function dur(e){return DUR[e.d]*(e.dot?1.5:1)*(e.tr?2/3:1)}
 var MARK=[["Largo",50],["Adagio",66],["Andante",80],["Moderato",100],["Allegretto",112],["Allegro",132],["Vivace",156],["Presto",176]];
 var uid=0;var st={pn:[],mn:1,nm:0,mt:0,tx:[],tr:0,dot:0,beam:1,m:[],d:4,mode:"note",acc:0,cur:null,n:4,q:4};
-var MPR=6,RH=230,CW=68,W=908,MW=(W-CW)/MPR,KS=0,SP=5,SEMI=[0,2,4,5,7,9,11];
+var TOP=66,TD=25,BU=25,BOT=40,MPR=6,RH=236,CW=68,W=908,MW=(W-CW)/MPR,KS=0,SP=5,SEMI=[0,2,4,5,7,9,11];
 var sv=document.getElementById("sv"),msg=document.getElementById("msg");
 function newM(){return{t:[],b:[]}}
 for(var i=0;i<MPR*2;i++)st.m.push(newM());
 function cap(){return st.n*4/st.q}
 function used(a){return a.reduce(function(s,e){return s+dur(e)},0)}
-function tt(r){return r*RH+66}
-function bt(r){return tt(r)+90}
+function tt(r){return r*RH+TOP}
+function bt(r){return tt(r)+40+TD+BU}
 function mk(id,items,key){
   var box=document.getElementById(id);
   items.forEach(function(it){
@@ -165,7 +165,7 @@ function body(r0,r1){
   });
   return o;
 }
-function draw(){applyAcc();var rows=Math.ceil(st.m.length/MPR);sv.setAttribute("viewBox","0 0 "+W+" "+(rows*RH));sv.innerHTML=body(0,rows)}
+function draw(){applyAcc();layout();var rows=Math.ceil(st.m.length/MPR);sv.setAttribute("viewBox","0 0 "+W+" "+(rows*RH));sv.innerHTML=body(0,rows)}
 function rest(e,x,t,c){
   if(e.d===1)return '<rect class="n'+c+'" x="'+(x-6)+'" y="'+(t+10)+'" width="12" height="5"/>';
   if(e.d===2)return '<rect class="n'+c+'" x="'+(x-6)+'" y="'+(t+15)+'" width="12" height="5"/>';
@@ -195,7 +195,7 @@ sv.addEventListener("click",function(ev){
     else mm.mk=mm.mk===sgv?"":sgv;
     draw();return;
   }
-  var stf=(y-row*RH)<131?"t":"b",top=stf==="t"?tt(row):bt(row);
+  var stf=(y-row*RH)<TOP+40+TD?"t":"b",top=stf==="t"?tt(row):bt(row);
   var a=st.m[mi][stf],xs=exs(a,mi);
   if(st.mode==="tie"){
     var bi=-1,bdd=18;
@@ -218,7 +218,7 @@ sv.addEventListener("click",function(ev){
     var gi=-1,gd=24;
     xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<gd&&!a[i].rest){gd=d;gi=i}});
     if(gi<0){msg.textContent="Tocca vicino a una nota per aggiungere una nota di abbellimento prima di essa; tocca la stessa altezza per toglierla.";return}
-    var gs=Math.max(-6,Math.min(14,Math.round((top+40-y)/SP))),ge=a[gi],gl=ge.g||[],gx=-1;
+    var gs=clampS(Math.round((top+40-y)/SP),stf),ge=a[gi],gl=ge.g||[],gx=-1;
     gl.forEach(function(g,j){if(g.s===gs)gx=j});
     if(gx>=0)gl.splice(gx,1);
     else if(gl.length>=3){msg.textContent="Massimo 3 note di abbellimento per nota.";return}
@@ -245,7 +245,7 @@ sv.addEventListener("click",function(ev){
     var ci=-1,cd=20;
     xs.forEach(function(px,i){var d=Math.abs(px-x);if(d<cd&&!a[i].rest){cd=d;ci=i}});
     if(ci<0){msg.textContent="Tocca vicino a una nota per aggiungere sopra o sotto un\u2019altra nota (accordo).";return}
-    var q={s:Math.max(-6,Math.min(14,Math.round((top+40-y)/SP))),a:st.acc},P=heads(a[ci]);
+    var q={s:clampS(Math.round((top+40-y)/SP),stf),a:st.acc},P=heads(a[ci]);
     if(P.some(function(h){return h.s===q.s})){msg.textContent="C\u2019\u00e8 gi\u00e0 una nota a questa altezza.";return}
     P.push(q);P.sort(function(p1,p2){return p1.s-p2.s});setHeads(a[ci],P);tone(midi(q,stf),0.35);draw();return;
   }
@@ -276,7 +276,7 @@ sv.addEventListener("click",function(ev){
   var e={d:st.d};if(st.dot)e.dot=1;if(st.tr)e.tr=1;
   if(st.mode==="rest")e.rest=true;
   else{
-    e.s=Math.max(-6,Math.min(14,Math.round((top+40-y)/SP)));e.a=st.acc;
+    e.s=clampS(Math.round((top+40-y)/SP),stf);e.a=st.acc;
     tone(midi(e,stf),0.35);
   }
   a.splice(idx,0,e);draw();
@@ -424,6 +424,25 @@ document.getElementById("tcan").onclick=closeTx;
 document.getElementById("tdel").onclick=function(){if(tEdit&&tEdit.i>=0)st.tx.splice(tEdit.i,1);closeTx();draw()};
 document.getElementById("tt").onkeydown=function(e){if(e.key==="Enter")saveTx()};
 document.getElementById("ks").onchange=function(){setKS(+this.value);draw()};
+function clampS(v,k){return k==="t"?Math.max(-12,Math.min(26,v)):Math.max(-13,Math.min(24,v))}
+function layout(){
+  var mnT=0,mxT=8,mnB=0,mxB=8;
+  st.m.forEach(function(m){
+    ["t","b"].forEach(function(k){
+      m[k].forEach(function(e){
+        if(e.rest)return;
+        heads(e).map(function(h){return h.s}).concat((e.g||[]).map(function(g){return g.s})).forEach(function(v){
+          if(k==="t"){if(v<mnT)mnT=v;if(v>mxT)mxT=v}else{if(v<mnB)mnB=v;if(v>mxB)mxB=v}
+        });
+      });
+    });
+  });
+  TD=Math.max(25,10+(2-mnT)*SP);
+  BU=Math.max(25,10+(mxB-6)*SP);
+  TOP=Math.max(66,50+(mxT-6)*SP);
+  BOT=Math.max(40,40+(-mnB)*SP);
+  RH=TOP+40+TD+BU+40+BOT;
+}
 function applyAcc(){
   ["t","b"].forEach(function(k){
     st.m.forEach(function(m){
@@ -476,7 +495,7 @@ function hairSvg(e,k){
   var L=flatK(k),a=-1,b=-1;
   L.forEach(function(p,j){if(p.e===e)a=j;if(e.hq&&p.e.id===e.hq)b=j});
   if(a<0||b<=a)return"";
-  var r0=Math.floor(L[a].mi/MPR),yc=tt(r0)+66,x1=exs(st.m[L[a].mi][k],L[a].mi)[L[a].i]-6,x2;
+  var r0=Math.floor(L[a].mi/MPR),yc=tt(r0)+40+(TD+BU)/2,x1=exs(st.m[L[a].mi][k],L[a].mi)[L[a].i]-6,x2;
   if(Math.floor(L[b].mi/MPR)===r0)x2=exs(st.m[L[b].mi][k],L[b].mi)[L[b].i]+8;else x2=W-6;
   return e.hp==="c"?'<path class="s" d="M'+x2+' '+(yc-5)+' L'+x1+' '+yc+' L'+x2+' '+(yc+5)+'"/>':'<path class="s" d="M'+x1+' '+(yc-5)+' L'+x2+' '+yc+' L'+x1+' '+(yc+5)+'"/>';
 }
@@ -603,7 +622,7 @@ function loadScore(j){
   if(!j||!Array.isArray(j.m)||j.m.length<1||j.m.length>48)throw 1;
   var ts=String(j.ts||"4/4");
   if(!Array.prototype.some.call(tsSel.options,function(o){return o.value===ts}))throw 1;
-  var cl=function(a){if(!Array.isArray(a))throw 1;return a.map(function(e){if(!DUR[e.d])throw 1;var o={d:e.d};if(e.rest)o.rest=true;else{o.s=Math.max(-6,Math.min(14,Math.round(+e.s)));if(isNaN(o.s))throw 1;o.a=e.a===2?2:(e.a===1?1:(e.a===-1?-1:0));if(Array.isArray(e.c)){o.c=e.c.slice(0,8).map(function(h){var hs=Math.max(-6,Math.min(14,Math.round(+h.s)));if(isNaN(hs))throw 1;return{s:hs,a:h.a===2?2:(h.a===1?1:(h.a===-1?-1:0))}});var PP=[{s:o.s,a:o.a}].concat(o.c).sort(function(p,q){return p.s-q.s});setHeads(o,PP)}}if(Array.isArray(e.g)&&!e.rest)o.g=e.g.slice(0,3).map(function(g){var gs=Math.max(-6,Math.min(14,Math.round(+g.s)));if(isNaN(gs))throw 1;return{s:gs,a:g.a===2?2:(g.a===1?1:(g.a===-1?-1:0))}});if(["1","2","3","4","5"].indexOf(String(e.f))>=0&&!e.rest)o.f=String(e.f);if((e.hp==="c"||e.hp==="d")&&+e.hq>0){o.hp=e.hp;o.hq=+e.hq}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.l)o.l=true;if(+e.id>0){o.id=+e.id;uid=Math.max(uid,o.id)}if(+e.sl>0)o.sl=+e.sl;return o})};
+  var cl=function(a){if(!Array.isArray(a))throw 1;return a.map(function(e){if(!DUR[e.d])throw 1;var o={d:e.d};if(e.rest)o.rest=true;else{o.s=Math.max(-14,Math.min(26,Math.round(+e.s)));if(isNaN(o.s))throw 1;o.a=e.a===2?2:(e.a===1?1:(e.a===-1?-1:0));if(Array.isArray(e.c)){o.c=e.c.slice(0,8).map(function(h){var hs=Math.max(-14,Math.min(26,Math.round(+h.s)));if(isNaN(hs))throw 1;return{s:hs,a:h.a===2?2:(h.a===1?1:(h.a===-1?-1:0))}});var PP=[{s:o.s,a:o.a}].concat(o.c).sort(function(p,q){return p.s-q.s});setHeads(o,PP)}}if(Array.isArray(e.g)&&!e.rest)o.g=e.g.slice(0,3).map(function(g){var gs=Math.max(-14,Math.min(26,Math.round(+g.s)));if(isNaN(gs))throw 1;return{s:gs,a:g.a===2?2:(g.a===1?1:(g.a===-1?-1:0))}});if(["1","2","3","4","5"].indexOf(String(e.f))>=0&&!e.rest)o.f=String(e.f);if((e.hp==="c"||e.hp==="d")&&+e.hq>0){o.hp=e.hp;o.hq=+e.hq}if(e.dot)o.dot=1;if(e.tr)o.tr=1;if(e.l)o.l=true;if(+e.id>0){o.id=+e.id;uid=Math.max(uid,o.id)}if(+e.sl>0)o.sl=+e.sl;return o})};
   var ms=j.m.map(function(m){var o={t:cl(m.t),b:cl(m.b)};if(m.rs)o.rs=true;if(m.re)o.re=true;if(m.v===1||m.v===2)o.v=m.v;if(["dc","ds","fine","segno","coda","tocoda"].indexOf(m.mk)>=0)o.mk=m.mk;return o});
   while(ms.length<2||ms.length%2)ms.push(newM());
   var p=ts.split("/");st.n=+p[0];st.q=+p[1];st.m=ms;st.cur=null;tsSel.value=ts;
@@ -657,7 +676,7 @@ document.getElementById("pdf").onclick=async function(){
   st.cur=null;
   var title=document.getElementById("ti").value||"Senza titolo",comp=document.getElementById("co").value;
   var tmx=document.getElementById("tm").textContent;
-  var rows=Math.ceil(st.m.length/MPR),per=5,pages=Math.ceil(rows/per);
+  var rows=Math.ceil(st.m.length/MPR),per=Math.max(1,Math.floor((267*W/170-90)/RH)),pages=Math.ceil(rows/per);
   var css=".l{stroke:#000;stroke-width:1}.n{fill:#000}.o{fill:#fff;stroke:#000;stroke-width:1.5}.s{stroke:#000;stroke-width:1.2;fill:none}text{fill:#000}.pen{fill:none;stroke:#c0392b;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}";
   msg.textContent="Creo il PDF…";
   try{

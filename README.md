@@ -20,7 +20,7 @@ Apri l'app una prima volta con la connessione attiva: così si salva anche la li
 
 ## Aggiornare l'app
 
-Carica di nuovo i file modificati (**Add file → Upload files**, stessi nomi, poi Commit). In `sw.js` cambia il numero di versione della cache (`spartito-v7` → `spartito-v8`), altrimenti i telefoni continuano a usare la copia vecchia. Poi riapri l'app una volta con la connessione.
+Carica di nuovo i file modificati (**Add file → Upload files**, stessi nomi, poi Commit). In `sw.js` cambia il numero di versione della cache (`spartito-v8` → `spartito-v9`), altrimenti i telefoni continuano a usare la copia vecchia. Poi riapri l'app una volta con la connessione.
 
 ## Salvare il lavoro
 
